@@ -228,18 +228,28 @@ def compute_player_comps(target_pid, target_pos, target_season):
     if target_rows.empty:
         return pd.DataFrame()
 
+   for m in avail_metrics:
+        df[m] = pd.to_numeric(df[m], errors="coerce")
+
+    target_rows = df[(df["pid"] == target_pid) & (df["season"] == target_season)]
+    if target_rows.empty:
+        target_rows = df[df["pid"] == target_pid]
+    if target_rows.empty:
+        return pd.DataFrame()
+
     t_vec = target_rows.iloc[-1]
     peers = df[df["pid"] != target_pid].copy()
     if peers.empty:
         return pd.DataFrame()
 
-    stds = peers[avail_metrics].std().replace(0, 1).fillna(1)
-    means = peers[avail_metrics].mean().fillna(0)
+    stds = peers[avail_metrics].std().replace(0, 1).fillna(1).astype(float)
+    means = peers[avail_metrics].mean().fillna(0).astype(float)
 
-    z_peers = (peers[avail_metrics].fillna(means) - means) / stds
-    z_target = (t_vec[avail_metrics].fillna(means) - means) / stds
+    z_peers = ((peers[avail_metrics].fillna(means) - means) / stds).astype(float)
+    z_target = ((t_vec[avail_metrics].fillna(means) - means) / stds).astype(float)
 
-    dist = np.sqrt(((z_peers - z_target) ** 2).sum(axis=1))
+    sq_sum = ((z_peers - z_target) ** 2).sum(axis=1).astype(float)
+    dist = np.sqrt(sq_sum)
     peers["Similarity"] = (100 / (1 + (dist / len(avail_metrics)))).round(1)
 
     top_comps = (
@@ -249,7 +259,6 @@ def compute_player_comps(target_pid, target_pos, target_season):
     )
     out_cols = ["player_name", "team", "season", "Similarity"] + avail_metrics[:3]
     return top_comps[out_cols]
-
 
 def build_column_config(df_cols):
     cfg = {}
