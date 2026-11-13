@@ -222,19 +222,7 @@ def compute_player_comps(target_pid, target_pos, target_season):
     if df.empty:
         return pd.DataFrame()
 
-    if df.empty:
-        return pd.DataFrame()
-
     for m in avail_metrics:
-        df[m] = pd.to_numeric(df[m], errors="coerce")
-
-  target_rows = df[(df["pid"] == target_pid) & (df["season"] == target_season)]
-    if target_rows.empty:
-        target_rows = df[df["pid"] == target_pid]
-    if target_rows.empty:
-        return pd.DataFrame()
-
-   for m in avail_metrics:
         df[m] = pd.to_numeric(df[m], errors="coerce")
 
     target_rows = df[(df["pid"] == target_pid) & (df["season"] == target_season)]
