@@ -14,7 +14,7 @@ st.set_page_config(
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "volleyball_stats.db")
-REMOTE_DB_URL = "https://github.com/aaronkuhlman24-ux/VolleyballDataV0.1/releases/tag/v1%2C0"
+REMOTE_DB_URL = "https://github.com/aaronkuhlman24-ux/VolleyballDataV0.1/releases/download/v1.0/volleyball_stats.db"
 
 # Custom CSS for deep navy header cards, badges, and clean table polish
 st.markdown("""
@@ -97,11 +97,40 @@ STAT_HELP = {
 }
 
 
-def ensure_database():
-    if not os.path.exists(DB_PATH) and REMOTE_DB_URL:
-        with st.spinner("Downloading volleyball database (first boot only, takes ~15 seconds)..."):
-            urllib.request.urlretrieve(REMOTE_DB_URL, DB_PATH)
+def is_valid_sqlite(path):
+    if not os.path.exists(path) or os.path.getsize(path) < 1_000_000:
+        return False
+    with open(path, "rb") as f:
+        return f.read(16) == b"SQLite format 3\x00"
 
+
+def ensure_database():
+    if is_valid_sqlite(DB_PATH):
+        return
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+    if not REMOTE_DB_URL:
+        return
+
+    with st.spinner("Downloading volleyball database (first boot only, takes ~15–25 seconds)..."):
+        tmp_path = DB_PATH + ".tmp"
+        req = urllib.request.Request(
+            REMOTE_DB_URL,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        with urllib.request.urlopen(req) as resp, open(tmp_path, "wb") as out_file:
+            while True:
+                chunk = resp.read(1024 * 1024)
+                if not chunk:
+                    break
+                out_file.write(chunk)
+
+        if not is_valid_sqlite(tmp_path):
+            os.remove(tmp_path)
+            st.error("Downloaded file is not a valid SQLite database. Verify that REMOTE_DB_URL points directly to the published release asset (.db) and that the release is not a Draft.")
+            st.stop()
+
+        os.replace(tmp_path, DB_PATH)
 
 def get_connection():
     ensure_database()
