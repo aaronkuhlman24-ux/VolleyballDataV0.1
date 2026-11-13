@@ -14,7 +14,7 @@ st.set_page_config(
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "volleyball_stats.db")
-REMOTE_DB_URL = "https://github.com/aaronkuhlman24-ux/VolleyballDataV0.1/releases/download/v1.0/volleyball_stats.db"
+REMOTE_DB_URL = "https://github.com/aaronkuhlman24-ux/VolleyballDataV0.1/releases/download/v1%2C0/volleyball_stats.db"
 
 # Custom CSS for deep navy header cards, badges, and clean table polish
 st.markdown("""
@@ -114,16 +114,22 @@ def ensure_database():
 
     with st.spinner("Downloading volleyball database (first boot only, takes ~15–25 seconds)..."):
         tmp_path = DB_PATH + ".tmp"
-        req = urllib.request.Request(
-            REMOTE_DB_URL,
-            headers={"User-Agent": "Mozilla/5.0"}
-        )
-        with urllib.request.urlopen(req) as resp, open(tmp_path, "wb") as out_file:
-            while True:
-                chunk = resp.read(1024 * 1024)
-                if not chunk:
-                    break
-                out_file.write(chunk)
+        try:
+            req = urllib.request.Request(
+                REMOTE_DB_URL,
+                headers={"User-Agent": "Mozilla/5.0"}
+            )
+            with urllib.request.urlopen(req) as resp, open(tmp_path, "wb") as out_file:
+                while True:
+                    chunk = resp.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    out_file.write(chunk)
+        except Exception as e:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+            st.error(f"Database download failed ({e}). URL tried: {REMOTE_DB_URL}")
+            st.stop()
 
         if not is_valid_sqlite(tmp_path):
             os.remove(tmp_path)
