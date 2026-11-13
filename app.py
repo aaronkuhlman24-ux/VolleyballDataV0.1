@@ -14,7 +14,7 @@ st.set_page_config(
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "volleyball_stats.db")
-REMOTE_DB_URL = ""
+REMOTE_DB_URL = "[https://github.com/aaronkuhlman24-ux/VolleyballDataV0.1/releases/download/v1.0/volleyball_stats.db](https://github.com/aaronkuhlman24-ux/VolleyballDataV0.1/releases/download/v1.0/volleyball_stats.db)"
 
 # Custom CSS for deep navy header cards, badges, and clean table polish
 st.markdown("""
